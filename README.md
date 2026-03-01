@@ -10,6 +10,7 @@
 
 - Passkeys
 - 2FA (TOTP)
+- DB Seeding Script
 
 ## Technology Stack
 
@@ -33,6 +34,12 @@ nvm use 24.10
 pnpm install
 
 cp .env.example .env
+
+# Push Drizzle schema changes to the database
+pnpm drizzle-kit push
+
+# Start drizzle kit's webgui
+pnpm drizzle-kit studio
 
 # Start Dev Server
 pnpm dev
