@@ -1,5 +1,5 @@
 import { isUniqueConstraintError } from "~~/server/utils/sqlite.errors";
-import { setSessionUser } from "~~/server/utils/user.session";
+import { setSanitizedUserSession } from "~~/server/utils/user.session";
 
 export default defineEventHandler(async (event) => {
   const { name, email, password } = await readBody(event);
@@ -31,7 +31,7 @@ export default defineEventHandler(async (event) => {
       });
     }
 
-    return setSessionUser(event, newUser);
+    return setSanitizedUserSession(event, newUser);
   } catch (e) {
     if (isUniqueConstraintError(e)) {
       throw createError({

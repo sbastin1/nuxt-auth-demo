@@ -1,7 +1,7 @@
 import { H3Event } from "#imports";
 import { DbUser } from "../types/user.db";
 
-export async function setSessionUser(
+export async function setSanitizedUserSession(
   event: H3Event<globalThis.EventHandlerRequest>,
   user: DbUser,
 ) {
