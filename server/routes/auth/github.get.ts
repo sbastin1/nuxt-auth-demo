@@ -4,7 +4,7 @@ export default defineOAuthGitHubEventHandler({
   config: {
     emailRequired: true,
   },
-  async onSuccess(event, { user, tokens }) {
+  async onSuccess(event, { user }) {
     if (!user.email) {
       throw createError({
         statusCode: 401,
@@ -37,10 +37,7 @@ export default defineOAuthGitHubEventHandler({
       });
     }
 
-    const { password, ...userWithoutPass } = existingUser;
-    await setUserSession(event, {
-      user: userWithoutPass,
-    });
+    await setSanitizedUserSession(event, existingUser);
     return sendRedirect(event, "/");
   },
 
