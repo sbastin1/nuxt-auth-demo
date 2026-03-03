@@ -6,6 +6,9 @@ export const user = sqliteTable("user", {
   email: text("email").notNull().unique(),
   login: text("login"),
   password: text("password"),
+  provider: text("provider", {
+    enum: ["credentials", "oauth", "passkey"],
+  }).notNull(),
 });
 
 export const loginRateLimit = sqliteTable("login_rate_limit", {

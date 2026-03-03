@@ -19,6 +19,7 @@ export default defineEventHandler(async (event) => {
         email,
         password: await hashPassword(password),
         login: email,
+        provider: "credentials",
       })
       .returning();
 

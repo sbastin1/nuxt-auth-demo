@@ -24,6 +24,7 @@ export default defineOAuthGitHubEventHandler({
           email: user.email,
           login: user.login,
           name: user.name,
+          provider: "credentials",
         })
         .returning();
       existingUser = result.at(0);

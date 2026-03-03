@@ -4,6 +4,7 @@ declare module "#auth-utils" {
     email: string;
     loginname?: string | null;
     name?: string | null;
+    provider: "credentials" | "oauth" | "passkey";
   }
 
   interface UserSession {
