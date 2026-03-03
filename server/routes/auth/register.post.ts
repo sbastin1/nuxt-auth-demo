@@ -34,6 +34,10 @@ export default defineEventHandler(async (event) => {
 
     return setSanitizedUserSession(event, newUser);
   } catch (e) {
+    if (e instanceof H3Error) {
+      throw e;
+    }
+
     if (isUniqueConstraintError(e)) {
       throw createError({
         statusCode: 400,

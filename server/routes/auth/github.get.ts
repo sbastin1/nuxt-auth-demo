@@ -13,32 +13,47 @@ export default defineOAuthGitHubEventHandler({
     }
 
     const db = useDb();
-    let existingUser = await db.query.user.findFirst({
-      where: eq(schema.user.email, user.email),
-    });
 
-    if (!existingUser) {
+    try {
       const result = await db
         .insert(schema.user)
         .values({
           email: user.email,
           login: user.login,
           name: user.name,
-          provider: "credentials",
+          provider: "oauth",
         })
         .returning();
-      existingUser = result.at(0);
-    }
 
-    if (!existingUser) {
+      const existingUser = result[0];
+
+      if (!existingUser) {
+        throw createError({
+          statusCode: 500,
+          statusMessage: "Error Authenticating with Github",
+        });
+      }
+
+      await setSanitizedUserSession(event, existingUser);
+
+      return sendRedirect(event, "/");
+    } catch (e) {
+      if (e instanceof H3Error && e.statusCode) {
+        throw e;
+      }
+
+      if (isUniqueConstraintError(e)) {
+        throw createError({
+          statusCode: 400,
+          statusMessage: "Account already exists. Please login.",
+        });
+      }
+
       throw createError({
         statusCode: 500,
-        statusMessage: "Error Authenticating with Github",
+        statusMessage: "Failed to register user.",
       });
     }
-
-    await setSanitizedUserSession(event, existingUser);
-    return sendRedirect(event, "/");
   },
 
   onError(event, error) {
