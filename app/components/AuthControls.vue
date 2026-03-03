@@ -17,5 +17,5 @@
 </template>
 
 <script setup lang="ts">
-const { loggedIn, user, session, fetch, clear, openInPopup } = useUserSession();
+const { loggedIn, user, clear } = useUserSession();
 </script>

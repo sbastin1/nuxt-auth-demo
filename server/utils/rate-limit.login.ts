@@ -1,4 +1,4 @@
-import { eq } from "drizzle-orm";
+import { eq, sql } from "drizzle-orm";
 
 const MAX_ATTEMPTS = 5;
 const WINDOW_MS = 15 * 60 * 1000;
@@ -7,57 +7,47 @@ export async function enforceLoginRateLimit(key: string) {
   const db = useDb();
   const now = Date.now();
 
-  try {
-    const existing = await db.query.loginRateLimit.findFirst({
-      where: eq(schema.loginRateLimit.key, key),
-    });
+  const result = await db
+    .insert(schema.loginRateLimit)
+    .values({
+      key,
+      attempts: 1,
+      firstAttemptAt: now,
+    })
+    .onConflictDoUpdate({
+      target: schema.loginRateLimit.key,
+      set: {
+        attempts: sql`
+            CASE
+              WHEN ${now} - ${schema.loginRateLimit.firstAttemptAt} > ${WINDOW_MS}
+                THEN 1
+              ELSE ${schema.loginRateLimit.attempts} + 1
+            END
+          `,
+        firstAttemptAt: sql`
+            CASE
+              WHEN ${now} - ${schema.loginRateLimit.firstAttemptAt} > ${WINDOW_MS}
+                THEN ${now}
+              ELSE ${schema.loginRateLimit.firstAttemptAt}
+            END
+          `,
+      },
+    })
+    .returning();
 
-    if (!existing) {
-      await db.insert(schema.loginRateLimit).values({
-        key,
-        attempts: 1,
-        firstAttemptAt: now,
-      });
-      return;
-    }
+  const row = result[0];
 
-    const windowExpired = now - existing.firstAttemptAt > WINDOW_MS;
-
-    if (windowExpired) {
-      await db
-        .update(schema.loginRateLimit)
-        .set({
-          attempts: 1,
-          firstAttemptAt: now,
-        })
-        .where(eq(schema.loginRateLimit.key, key));
-
-      return;
-    }
-
-    if (existing.attempts >= MAX_ATTEMPTS) {
-      throw createError({
-        statusCode: 429,
-        statusMessage: "Too many login attempts. Try again later.",
-      });
-    }
-
-    await db
-      .update(schema.loginRateLimit)
-      .set({
-        attempts: existing.attempts + 1,
-      })
-      .where(eq(schema.loginRateLimit.key, key));
-  } catch (e) {
-    if (isError(e)) {
-      throw e;
-    }
-
-    console.error("Rate limit failure:", e);
-
+  if (!row) {
     throw createError({
       statusCode: 500,
       statusMessage: "Unable to process login request.",
+    });
+  }
+
+  if (row.attempts > MAX_ATTEMPTS) {
+    throw createError({
+      statusCode: 429,
+      statusMessage: "Too many login attempts. Try again later.",
     });
   }
 }
