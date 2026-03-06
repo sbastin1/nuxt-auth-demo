@@ -41,5 +41,16 @@ export default defineEventHandler(async (event) => {
   await clearRateLimit(ipKey);
   await clearRateLimit(emailKey);
 
-  return setSanitizedUserSession(event, existingUser);
+  if (existingUser.twoFactorEnabled) {
+    return await setUserSession(event, {
+      secure: {
+        twoFactorUserId: existingUser.id,
+      },
+      twoFactor: {
+        required: true,
+      },
+    });
+  }
+
+  return await setSanitizedUserSession(event, existingUser);
 });

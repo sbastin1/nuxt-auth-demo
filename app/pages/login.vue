@@ -1,10 +1,42 @@
+<template>
+  <div class="flex flex-col items-center justify-center gap-4 p-4 mt-10">
+    <UPageCard class="w-full max-w-md">
+      <UAuthForm
+        :schema="schema"
+        title="Login"
+        description="Enter your credentials to access your account."
+        icon="i-lucide-user"
+        :fields="fields"
+        :providers="providers"
+        @submit="onSubmit"
+      >
+        <template #description>
+          Don't have an account?
+          <ULink to="/register" class="text-primary font-medium">Sign up</ULink>
+        </template>
+      </UAuthForm>
+    </UPageCard>
+  </div>
+
+  <TwoFactorVerifyModal
+    v-if="isOpenModal"
+    v-model="modelValue"
+    @close="closeModal"
+    @submit="verifyTwoFactor"
+  />
+</template>
+
 <script setup lang="ts">
 import * as z from "zod";
 import type { FormSubmitEvent, AuthFormField } from "@nuxt/ui";
 import { FetchError } from "ofetch";
 
-const { loggedIn, fetch, openInPopup } = useUserSession();
+const { loggedIn, fetch, openInPopup, session } = useUserSession();
 const toast = useToast();
+const modelValue = ref<number[]>();
+const isOpenModal = ref(false);
+
+const twoFactorEnabled = computed(() => session.value?.twoFactor?.required);
 
 const fields: AuthFormField[] = [
   {
@@ -51,6 +83,10 @@ watch(loggedIn, () => {
   if (loggedIn.value) navigateTo("/admin");
 });
 
+const closeModal = () => {
+  isOpenModal.value = false;
+};
+
 async function onSubmit(payload: FormSubmitEvent<Schema>) {
   try {
     await $fetch("auth/login", {
@@ -58,12 +94,17 @@ async function onSubmit(payload: FormSubmitEvent<Schema>) {
       body: payload.data,
     });
 
+    fetch();
+
+    if (twoFactorEnabled) {
+      isOpenModal.value = true;
+      return;
+    }
+
     toast.add({
       title: "Logged In Successfully!",
       description: "Welcome!",
     });
-
-    fetch();
   } catch (e) {
     if (e instanceof FetchError) {
       toast.add({
@@ -80,25 +121,38 @@ async function onSubmit(payload: FormSubmitEvent<Schema>) {
     }
   }
 }
-</script>
 
-<template>
-  <div class="flex flex-col items-center justify-center gap-4 p-4 mt-10">
-    <UPageCard class="w-full max-w-md">
-      <UAuthForm
-        :schema="schema"
-        title="Login"
-        description="Enter your credentials to access your account."
-        icon="i-lucide-user"
-        :fields="fields"
-        :providers="providers"
-        @submit="onSubmit"
-      >
-        <template #description>
-          Don't have an account?
-          <ULink to="/register" class="text-primary font-medium">Sign up</ULink>
-        </template>
-      </UAuthForm>
-    </UPageCard>
-  </div>
-</template>
+const verifyTwoFactor = async () => {
+  const token = modelValue.value?.toString().split(",").join("");
+
+  try {
+    await $fetch("/auth/2fa/verify", {
+      method: "POST",
+      body: {
+        token: token,
+      },
+    });
+
+    fetch();
+
+    toast.add({
+      title: "Logged In Successfully!",
+      description: "Welcome!",
+    });
+  } catch (e) {
+    if (e instanceof FetchError) {
+      toast.add({
+        title: "Error Logging In",
+        description: e.data.message,
+        color: "error",
+      });
+    } else {
+      toast.add({
+        title: "Error Logging In",
+        description: "There was an issue logging in. Please contact support.",
+        color: "error",
+      });
+    }
+  }
+};
+</script>

@@ -5,14 +5,15 @@ declare module "#auth-utils" {
     loginname?: string | null;
     name?: string | null;
     provider: "credentials" | "oauth" | "passkey";
+    twoFactorEnabled: boolean;
   }
 
   interface UserSession {
-    // Add your own fields
+    twoFactor?: { required: boolean };
   }
 
   interface SecureSessionData {
-    // Add your own fields
+    twoFactorUserId?: number;
   }
 }
 

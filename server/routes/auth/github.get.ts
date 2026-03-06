@@ -1,5 +1,3 @@
-import { eq } from "drizzle-orm";
-
 export default defineOAuthGitHubEventHandler({
   config: {
     emailRequired: true,

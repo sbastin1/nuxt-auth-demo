@@ -9,6 +9,10 @@ export const user = sqliteTable("user", {
   provider: text("provider", {
     enum: ["credentials", "oauth", "passkey"],
   }).notNull(),
+  twoFactorEnabled: integer("two_factor_enabled", { mode: "boolean" })
+    .notNull()
+    .default(false),
+  twoFactorSecret: text("two_factor_secret"),
 });
 
 export const loginRateLimit = sqliteTable("login_rate_limit", {

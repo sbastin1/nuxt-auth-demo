@@ -5,7 +5,11 @@ export async function setSanitizedUserSession(
   event: H3Event<globalThis.EventHandlerRequest>,
   user: DbUser,
 ) {
-  const { password: _, ...userWithoutPassword } = user;
+  const {
+    password: _password,
+    twoFactorSecret: _secret,
+    ...userWithoutPassword
+  } = user;
 
   await setUserSession(event, {
     user: userWithoutPassword,
