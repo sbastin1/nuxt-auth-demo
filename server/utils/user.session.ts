@@ -13,6 +13,7 @@ export async function setSanitizedUserSession(
 
   await setUserSession(event, {
     user: userWithoutPassword,
+    passkeyChallenge: undefined,
   });
 
   return userWithoutPassword;

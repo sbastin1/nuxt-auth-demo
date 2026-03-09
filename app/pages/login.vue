@@ -62,6 +62,13 @@ const fields: AuthFormField[] = [
 
 const providers = [
   {
+    label: "Use Passkey",
+    icon: "i-simple-icons-passbolt",
+    onClick: () => {
+      handlePasskeyLogin();
+    },
+  },
+  {
     label: "GitHub",
     icon: "i-simple-icons-github",
     onClick: () => {
@@ -153,6 +160,22 @@ const verifyTwoFactor = async () => {
         color: "error",
       });
     }
+  }
+};
+
+const handlePasskeyLogin = async () => {
+  try {
+    const result = await loginWithPasskey();
+    fetch();
+    if (result?.verified) {
+      await navigateTo("/admin");
+    }
+  } catch (e) {
+    if (e instanceof DOMException && e.name === "AbortError") {
+      // user cancelled the passkey prompt
+      return;
+    }
+    console.log(e);
   }
 };
 </script>

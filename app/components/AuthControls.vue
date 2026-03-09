@@ -9,11 +9,16 @@
         <NuxtLink to="/login">Login</NuxtLink>
       </UButton>
     </div>
-    <div v-if="loggedIn && user?.provider === 'credentials'">
+    <div v-if="loggedIn && user?.provider.includes('credentials')">
       <UButton
         @click="user?.twoFactorEnabled ? openDisableModal() : openSetupModal()"
         >{{ toggle2FA }}</UButton
       >
+    </div>
+    <div
+      v-if="loggedIn && !user?.provider.includes('passkey') && passkeySupported"
+    >
+      <UButton @click="handleAddPasskey">Enable Passkey</UButton>
     </div>
   </AuthState>
 
@@ -34,10 +39,13 @@
 </template>
 
 <script setup lang="ts">
+import { browserSupportsWebAuthn } from "@simplewebauthn/browser";
 import { FetchError } from "ofetch";
+import { registerPasskey } from "~/composables/registerPasskey";
 
 const { loggedIn, user, clear, fetch } = useUserSession();
 const toast = useToast();
+const passkeySupported = browserSupportsWebAuthn();
 const qrcode = ref("");
 const modelValue = ref<number[]>();
 const isOpenSetupModal = ref(false);
@@ -100,6 +108,7 @@ const setup2FA = async () => {
 };
 
 fetch();
+
 const openDisableModal = () => {
   modelValue.value = [];
   isOpenDisableModal.value = true;
@@ -143,5 +152,17 @@ const disable2FA = async () => {
 const closeModals = () => {
   isOpenSetupModal.value = false;
   isOpenDisableModal.value = false;
+};
+
+const handleAddPasskey = async () => {
+  try {
+    await registerPasskey();
+    fetch();
+  } catch (e) {
+    if (e instanceof DOMException && e.name === "AbortError") {
+      // user cancelled the passkey prompt
+      return;
+    }
+  }
 };
 </script>
