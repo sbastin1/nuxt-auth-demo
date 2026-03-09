@@ -1,6 +1,6 @@
 import { eq } from "drizzle-orm";
 import { enforceLoginRateLimit } from "~~/server/utils/rate-limit.login";
-import { setSessionUser } from "~~/server/utils/user.session";
+import { setSanitizedUserSession } from "~~/server/utils/user.session";
 
 export default defineEventHandler(async (event) => {
   const { email, password } = await readBody(event);
@@ -41,5 +41,16 @@ export default defineEventHandler(async (event) => {
   await clearRateLimit(ipKey);
   await clearRateLimit(emailKey);
 
-  return setSessionUser(event, existingUser);
+  if (existingUser.twoFactorEnabled) {
+    return await setUserSession(event, {
+      secure: {
+        twoFactorUserId: existingUser.id,
+      },
+      twoFactor: {
+        required: true,
+      },
+    });
+  }
+
+  return await setSanitizedUserSession(event, existingUser);
 });

@@ -35,7 +35,6 @@ const providers = [
     label: "GitHub",
     icon: "i-simple-icons-github",
     onClick: () => {
-      toast.add({ title: "GitHub", description: "Login with GitHub" });
       openInPopup("/auth/github");
     },
   },

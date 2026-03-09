@@ -2,7 +2,12 @@
 export default defineNuxtConfig({
   compatibilityDate: "2025-07-15",
   devtools: { enabled: true },
-  modules: ["@nuxt/eslint", "@nuxt/ui", "nuxt-auth-utils"],
+  modules: [
+    "@nuxt/eslint",
+    "@nuxt/ui",
+    "nuxt-auth-utils",
+    "@nuxt/image",
+  ],
   css: ["~/assets/css/main.css"],
   runtimeConfig: {
     oauth: {
