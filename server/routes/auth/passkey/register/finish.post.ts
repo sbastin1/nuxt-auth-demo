@@ -37,7 +37,7 @@ export default defineEventHandler(async (event) => {
   await db.transaction(async (tx) => {
     await tx.insert(schema.passkey).values({
       userId: session.user.id,
-      credentialID: Buffer.from(credential.id).toString("base64"),
+      credentialID: credential.id,
       publicKey: Buffer.from(credential.publicKey),
       counter: credential.counter,
       deviceType: credentialDeviceType,

@@ -7,7 +7,7 @@ export default defineEventHandler(async (event) => {
   const db = useDb();
 
   const session = await getUserSession(event);
-  console.log(session.passkeyChallenge);
+
   const expectedChallenge = session.passkeyChallenge;
 
   if (!expectedChallenge) {
