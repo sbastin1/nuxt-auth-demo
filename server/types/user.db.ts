@@ -4,7 +4,7 @@ export interface DbUser {
   email: string;
   name: string | null;
   login: string | null;
-  provider: "credentials" | "oauth" | "passkey";
+  provider: ("credentials" | "oauth" | "passkey")[];
   twoFactorEnabled: boolean;
   twoFactorSecret: string | null;
 }
