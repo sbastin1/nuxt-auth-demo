@@ -11,7 +11,7 @@ export async function setSanitizedUserSession(
     ...userWithoutPassword
   } = user;
 
-  await setUserSession(event, {
+  await replaceUserSession(event, {
     user: userWithoutPassword,
     passkeyChallenge: undefined,
   });

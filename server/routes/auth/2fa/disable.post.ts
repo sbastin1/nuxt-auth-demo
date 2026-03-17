@@ -67,5 +67,8 @@ export default defineEventHandler(async (event) => {
       ...session.user,
       twoFactorEnabled: false,
     },
+    twoFactor: {
+      required: false,
+    },
   });
 });
