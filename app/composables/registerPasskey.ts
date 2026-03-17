@@ -5,9 +5,7 @@ export async function registerPasskey() {
   try {
     const options = await $fetch<PublicKeyCredentialCreationOptionsJSON>(
       "/api/auth/passkey/register/start",
-      {
-        method: "POST",
-      },
+      { method: "GET" },
     );
 
     const credential = await startRegistration({

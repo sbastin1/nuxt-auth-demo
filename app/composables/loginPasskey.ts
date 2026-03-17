@@ -5,7 +5,7 @@ export async function loginWithPasskey() {
   try {
     const options = await $fetch<PublicKeyCredentialRequestOptionsJSON>(
       "/api/auth/passkey/login/start",
-      { method: "POST" },
+      { method: "GET" },
     );
 
     const credential = await startAuthentication({
