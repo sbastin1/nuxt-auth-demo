@@ -4,7 +4,7 @@ import type { PublicKeyCredentialRequestOptionsJSON } from "@simplewebauthn/brow
 export async function loginWithPasskey() {
   try {
     const options = await $fetch<PublicKeyCredentialRequestOptionsJSON>(
-      "/auth/passkey/login/start",
+      "/api/auth/passkey/login/start",
       { method: "POST" },
     );
 
@@ -12,7 +12,7 @@ export async function loginWithPasskey() {
       optionsJSON: options,
     });
 
-    const result = await $fetch("/auth/passkey/login/finish", {
+    const result = await $fetch("/api/auth/passkey/login/finish", {
       method: "POST",
       body: credential,
     });

@@ -72,7 +72,7 @@ const providers = [
     label: "GitHub",
     icon: "i-simple-icons-github",
     onClick: () => {
-      openInPopup("/auth/github");
+      openInPopup("/api/auth/github");
     },
   },
 ];
@@ -96,7 +96,7 @@ const closeModal = () => {
 
 async function onSubmit(payload: FormSubmitEvent<Schema>) {
   try {
-    await $fetch("auth/login", {
+    await $fetch("/api/auth/login", {
       method: "POST",
       body: payload.data,
     });
@@ -133,7 +133,7 @@ const verifyTwoFactor = async () => {
   const token = modelValue.value?.toString().split(",").join("");
 
   try {
-    await $fetch("/auth/2fa/verify", {
+    await $fetch("/api/auth/2fa/verify", {
       method: "POST",
       body: {
         token: token,
