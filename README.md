@@ -6,12 +6,7 @@
 - Password-based Auth
 - Login Rate Limiting
 - 2FA (TOTP)
-
-**TODO:**
-
 - Passkeys
-- _clean up and beatify codebase.._
-- DB Seeding Script
 
 ## Technology Stack
 
