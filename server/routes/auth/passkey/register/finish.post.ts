@@ -1,5 +1,6 @@
 import { verifyRegistrationResponse } from "@simplewebauthn/server";
 import { eq } from "drizzle-orm";
+import { DbUser } from "~~/server/types/user.db";
 import { webauthnConfig } from "~~/server/utils/webauthn";
 
 export default defineEventHandler(async (event) => {
@@ -34,6 +35,8 @@ export default defineEventHandler(async (event) => {
   const { credential, credentialDeviceType, credentialBackedUp } =
     verification.registrationInfo;
 
+  let updatedUser: DbUser | undefined;
+
   await db.transaction(async (tx) => {
     await tx.insert(schema.passkey).values({
       userId: session.user.id,
@@ -46,20 +49,31 @@ export default defineEventHandler(async (event) => {
       createdAt: new Date(),
     });
 
-    if (!session.user.provider.includes("passkey")) {
-      await tx
+    const user = await tx.query.user.findFirst({
+      where: eq(schema.user.id, session.user.id),
+      columns: { provider: true },
+    });
+
+    const providers = [...(user?.provider ?? [])];
+
+    if (!providers.includes("passkey")) {
+      providers.push("passkey");
+
+      const result = await tx
         .update(schema.user)
-        .set({
-          provider: [...session.user.provider, "passkey"],
-        })
-        .where(eq(schema.user.id, session.user.id));
+        .set({ provider: providers })
+        .where(eq(schema.user.id, session.user.id))
+        .returning();
+
+      updatedUser = result[0];
     }
   });
 
-  await setUserSession(event, {
-    ...session,
-    passkeyChallenge: undefined,
-  });
+  if (!updatedUser) {
+    throw createError("An internal server error occured");
+  }
+
+  await setSanitizedUserSession(event, updatedUser);
 
   return { verified: true };
 });

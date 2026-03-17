@@ -101,9 +101,9 @@ async function onSubmit(payload: FormSubmitEvent<Schema>) {
       body: payload.data,
     });
 
-    fetch();
+    await fetch();
 
-    if (twoFactorEnabled) {
+    if (twoFactorEnabled.value) {
       isOpenModal.value = true;
       return;
     }
@@ -175,7 +175,7 @@ const handlePasskeyLogin = async () => {
       // user cancelled the passkey prompt
       return;
     }
-    console.log(e);
+    console.error(e);
   }
 };
 </script>

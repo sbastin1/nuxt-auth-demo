@@ -1,19 +1,30 @@
+import { eq } from "drizzle-orm";
+
 export default defineOAuthGitHubEventHandler({
   config: {
     emailRequired: true,
   },
-  async onSuccess(event, { user }) {
-    if (!user.email) {
-      throw createError({
-        statusCode: 401,
-        statusMessage: "Github account must have an email address set.",
-      });
-    }
 
+  async onSuccess(event, { user }) {
     const db = useDb();
 
-    try {
-      const result = await db
+    const dbUser = await db.transaction(async (tx) => {
+      if (!user.email) {
+        throw createError({
+          statusCode: 401,
+          statusMessage: "GitHub account must have an email address set.",
+        });
+      }
+
+      const existingUser = await tx.query.user.findFirst({
+        where: eq(schema.user.email, user.email),
+      });
+
+      if (existingUser) {
+        return existingUser;
+      }
+
+      const result = await tx
         .insert(schema.user)
         .values({
           email: user.email,
@@ -23,35 +34,21 @@ export default defineOAuthGitHubEventHandler({
         })
         .returning();
 
-      const existingUser = result[0];
+      const newUser = result[0];
 
-      if (!existingUser) {
+      if (!newUser) {
         throw createError({
           statusCode: 500,
-          statusMessage: "Error Authenticating with Github",
+          statusMessage: "Failed to create user.",
         });
       }
 
-      await setSanitizedUserSession(event, existingUser);
+      return newUser;
+    });
 
-      return sendRedirect(event, "/");
-    } catch (e) {
-      if (e instanceof H3Error && e.statusCode) {
-        throw e;
-      }
+    await setSanitizedUserSession(event, dbUser);
 
-      if (isUniqueConstraintError(e)) {
-        throw createError({
-          statusCode: 400,
-          statusMessage: "Account already exists. Please login.",
-        });
-      }
-
-      throw createError({
-        statusCode: 500,
-        statusMessage: "Failed to register user.",
-      });
-    }
+    return sendRedirect(event, "/");
   },
 
   onError(event, error) {
