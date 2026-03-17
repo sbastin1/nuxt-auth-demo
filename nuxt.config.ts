@@ -13,4 +13,19 @@ export default defineNuxtConfig({
       },
     },
   },
+  app: {
+    head: {
+      title: "Nuxt-Auth Demo",
+      htmlAttrs: {
+        lang: "en",
+      },
+      meta: [
+        {
+          name: "description",
+          content:
+            "A demo of the nuxt-auth-utils library with DrizzleDB. Including TOTP, Passkeys, Rate Limiting etc.",
+        },
+      ],
+    },
+  },
 });
