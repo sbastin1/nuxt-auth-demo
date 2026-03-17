@@ -35,9 +35,6 @@
       </p>
     </div>
   </div>
-
-  <p>{{ user?.provider }}</p>
-  <p>{{ session }}</p>
 </template>
 
 <script setup lang="ts">

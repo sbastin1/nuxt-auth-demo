@@ -86,7 +86,7 @@ type Passkey = {
 const isRegistering = ref(false);
 
 const { data, refresh } = await useFetch<{ passkeys: Passkey[] }>(
-  "/auth/passkey/getuser",
+  "/api/auth/passkey/getuser",
 );
 
 const passkeys = computed(() => data.value?.passkeys ?? []);

@@ -72,7 +72,7 @@ const toggle2FA = computed(() =>
 const openSetupModal = async () => {
   modelValue.value = [];
 
-  const qr = await $fetch("/auth/2fa/setup", {
+  const qr = await $fetch("/api/auth/2fa/setup", {
     method: "GET",
   });
 
@@ -84,7 +84,7 @@ const setup2FA = async () => {
   const token = modelValue.value?.toString().split(",").join("");
 
   try {
-    await $fetch("/auth/2fa/activate", {
+    await $fetch("/api/auth/2fa/activate", {
       method: "POST",
       body: { token },
     });
@@ -124,7 +124,7 @@ const disable2FA = async () => {
   const token = modelValue.value?.toString().split(",").join("");
 
   try {
-    await $fetch("/auth/2fa/disable", {
+    await $fetch("/api/auth/2fa/disable", {
       method: "POST",
       body: { token },
     });
