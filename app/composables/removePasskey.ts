@@ -1,7 +1,7 @@
 export async function removePasskey(id: number) {
   try {
     const response = await $fetch<{ success: boolean; deletedId: number }>(
-      "/auth/passkey/remove",
+      "/api/auth/passkey/remove",
       {
         method: "DELETE",
         body: { id },

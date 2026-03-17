@@ -35,7 +35,7 @@ const providers = [
     label: "GitHub",
     icon: "i-simple-icons-github",
     onClick: () => {
-      openInPopup("/auth/github");
+      openInPopup("/api/auth/github");
     },
   },
 ];
@@ -68,7 +68,7 @@ async function onSubmit(payload: FormSubmitEvent<Schema>) {
   }
 
   try {
-    await $fetch("/auth/register", {
+    await $fetch("/api/auth/register", {
       method: "POST",
       body: payload.data,
     });

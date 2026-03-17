@@ -70,10 +70,21 @@ export default defineEventHandler(async (event) => {
   });
 
   if (!updatedUser) {
-    throw createError("An internal server error occured");
+    updatedUser = await db.query.user.findFirst({
+      where: eq(schema.user.id, session.user.id),
+    });
   }
 
-  await setSanitizedUserSession(event, updatedUser);
+  if (!updatedUser) {
+    throw createError({
+      statusCode: 500,
+      statusMessage: "User not found after passkey registration",
+    });
+  }
+
+  await setSanitizedUserSession(event, updatedUser, {
+    passkeyChallenge: undefined,
+  });
 
   return { verified: true };
 });

@@ -36,7 +36,7 @@ export default defineEventHandler(async (event) => {
     excludeCredentials,
   });
 
-  await setUserSession(event, {
+  await replaceUserSession(event, {
     ...session,
     passkeyChallenge: options.challenge,
   });

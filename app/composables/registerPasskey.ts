@@ -4,7 +4,7 @@ import type { PublicKeyCredentialCreationOptionsJSON } from "@simplewebauthn/bro
 export async function registerPasskey() {
   try {
     const options = await $fetch<PublicKeyCredentialCreationOptionsJSON>(
-      "/auth/passkey/register/start",
+      "/api/auth/passkey/register/start",
       {
         method: "POST",
       },
@@ -14,7 +14,7 @@ export async function registerPasskey() {
       optionsJSON: options,
     });
 
-    const verification = await $fetch("/auth/passkey/register/finish", {
+    const verification = await $fetch("/api/auth/passkey/register/finish", {
       method: "POST",
       body: credential,
     });

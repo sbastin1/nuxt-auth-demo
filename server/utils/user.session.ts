@@ -4,6 +4,7 @@ import { DbUser } from "../types/user.db";
 export async function setSanitizedUserSession(
   event: H3Event<globalThis.EventHandlerRequest>,
   user: DbUser,
+  optionalFields: Record<string, unknown> = {},
 ) {
   const {
     password: _password,
@@ -13,7 +14,7 @@ export async function setSanitizedUserSession(
 
   await replaceUserSession(event, {
     user: userWithoutPassword,
-    passkeyChallenge: undefined,
+    ...optionalFields,
   });
 
   return userWithoutPassword;
