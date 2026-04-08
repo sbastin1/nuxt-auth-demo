@@ -1,30 +1,187 @@
-# Auth Form
+# Nuxt Auth Demo – Full-Stack Authentication System
 
-**Currently Implemented:**
+A full-stack authentication system built with Nuxt, focusing on **secure session handling, multi-factor authentication, and modern authentication flows**.
 
-- OAuth
-- Password-based Auth
-- Login Rate Limiting
-- 2FA (TOTP)
-- Passkeys
+This project goes beyond basic auth demos by implementing **core authentication logic manually**, including rate limiting, passkeys (WebAuthn), and credential-based authentication.
 
-## Technology Stack
+---
 
-Package Manager: pnpm
+## Tech Stack
 
-- Node v24.10
-- Vue
-- Nuxt
-- Nuxt-Auth-Utils
-- NuxtUi
-- Tailwindcss
-- Drizzle ORM w/SQLite
+* **Frontend / Server Framework:** Nuxt v4
+* **Component Library:** NuxtUi v4
+* **Language:** TypeScript
+* **Database ORM:** Drizzle ORM, Driver: SQLite
+* **Authentication Utilities:** nuxt-auth-utils (used selectively)
+* **Passkeys / WebAuthn:** SimpleWebAuthn
+
+---
+
+## Features
+
+### Authentication Methods
+
+* OAuth (via nuxt-auth-utils)
+* Password-based authentication (custom implementation)
+* Passkeys (WebAuthn / FIDO2)
+* Two-Factor Authentication (TOTP)
+
+### Security Features
+
+* Login rate limiting (custom DB-based implementation)
+* Secure session handling
+* Multi-provider account linking (password + passkey)
+
+---
+
+## Implementation Details
+
+### Password Authentication
+
+* Password verification implemented manually (no full auth framework abstraction)
+* Integrated into a custom session flow
+
+---
+
+### Rate Limiting (Custom Implementation)
+
+Login rate limiting is implemented **at the database level**, not via middleware or token bucket libraries.
+
+**Approach:**
+
+* Each login attempt is tracked per key (e.g. IP or user identifier)
+* Uses an **atomic upsert** with conditional SQL logic
+* Automatically resets the window after a defined time period
+
+**Key characteristics:**
+
+* No in-memory store → works across multiple instances
+* No external dependencies (e.g. Redis)
+* Window-based limiting (fixed window)
+
+Core logic:
+
+```ts
+CASE
+  WHEN now - firstAttemptAt > WINDOW
+    THEN reset attempts
+  ELSE increment attempts
+```
+
+This ensures:
+
+* Consistent enforcement across distributed environments
+* Minimal overhead with a single query per attempt
+
+---
+
+### Passkeys (WebAuthn)
+
+Passkey registration is implemented using a **challenge–response flow** with server-side verification.
+
+**Flow:**
+
+1. Server generates a challenge and stores it in the session
+2. Client creates credentials via WebAuthn API
+3. Server verifies response using SimpleWebAuthn
+4. Credential is stored with:
+
+   * Public key
+   * Counter (for replay protection)
+   * Device metadata
+5. User session is updated to include passkey authentication
+
+**Security considerations:**
+
+* Challenge is required and validated
+* Credential counter stored to prevent replay attacks
+* Credentials tied to user and persisted securely
+
+---
+
+### Two-Factor Authentication (TOTP)
+
+* Time-based one-time passwords implemented for additional security
+* Integrated into login flow after primary authentication
+
+---
+
+### Session Handling
+
+* Session state is managed server-side
+* Supports multiple authentication providers per user:
+
+  * Password
+  * OAuth
+  * Passkey
+
+---
+
+## Architecture Overview
+
+```text
+Client
+  ↓
+Login Request
+  ↓
+[Rate Limiting Check]
+  ↓
+Credential Verification (Password / OAuth / Passkey)
+  ↓
+Optional 2FA (TOTP)
+  ↓
+Session Creation
+  ↓
+Authenticated Requests
+```
+
+---
+
+## What Is Custom vs Library-Based
+
+### Custom Implementations
+
+* Password authentication flow
+* Rate limiting (database-driven logic)
+* Session lifecycle handling
+* Passkey persistence + integration logic
+* Multi-provider account handling
+
+### Library-Assisted
+
+* OAuth flow (nuxt-auth-utils)
+* WebAuthn verification (SimpleWebAuthn)
+* Utility composition (nuxt-auth-utils)
+
+---
+
+## Design Decisions
+
+* **Database-driven rate limiting** instead of in-memory/token bucket
+  → Ensures consistency across distributed environments
+
+* **Passkeys (WebAuthn)**
+  → Provides phishing-resistant authentication
+
+* **Multi-provider accounts**
+  → Users can authenticate via password, OAuth, or passkey
+
+---
+
+## Limitations
+
+* Built to explore and demonstrate authentication architecture, security flows, and modern auth methods in a full-stack Nuxt application.
+* Focused on demonstrating authentication architecture and implementation
+* Some edge cases (e.g. advanced abuse prevention) may require further hardening
 
 ## Setup
-
+### Development
 ```bash
-#optional, select node version
+#select node version
 nvm use 24.10
+
+#optional, match package manager version
+corepack enable
 
 # Install Dependencies
 pnpm install
@@ -32,7 +189,7 @@ pnpm install
 cp .env.example .env
 
 # Push Drizzle schema changes to the database
-pnpm drizzle-kit push
+mkdir .data && pnpm drizzle-kit push
 
 # Start drizzle kit's webgui
 pnpm drizzle-kit studio
@@ -48,13 +205,7 @@ pnpm dev
 3. Fill out the Client Id and Secret with the data provided by your provider
 4. Restart the dev server
 
-```ru
-NUXT_SESSION_PASSWORD=
-NUXT_OAUTH_<PROVIDER>_CLIENT_ID=
-NUXT_OAUTH_<PROVIDER>_CLIENT_SECRET=
-```
-
-## Production
+### Production
 
 ```bash
 # Create Local Preview of Production Build
